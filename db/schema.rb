@@ -19,7 +19,7 @@ ActiveRecord::Schema.define(version: 2020_11_24_192123) do
     t.string "zhash"
     t.boolean "mainChain"
     t.decimal "fee"
-    t.string "type"
+    t.string "ttype"
     t.boolean "shielded"
     t.integer "index"
     t.string "blockHash"

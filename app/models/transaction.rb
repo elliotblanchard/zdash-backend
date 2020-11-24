@@ -1,3 +1,3 @@
 class Transaction < ApplicationRecord
-    validates :zhash, presence: true
+  validates :zhash, presence: true
 end
