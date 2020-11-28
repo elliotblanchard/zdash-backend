@@ -1,0 +1,3 @@
+class NetworksController < ApplicationController
+
+end
