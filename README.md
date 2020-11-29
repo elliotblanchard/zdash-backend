@@ -52,9 +52,9 @@ Things you may want to cover:
         * Shielded pool size (what is this pulled from)
     * Look at a single transaction
     * Sprout vs Sapling activity (?)
-    * Mining stats (?)
     * Price (?)
     * Maps (?)
+    * Mining stats (?)
     * Info on a single account (maybe some charts like - transactions (limit 1000) over time, pie chart showing sent vs recieved, etc):
       * https://api.zcha.in/v2/mainnet//v2/mainnet/accounts/{address}
       * https://api.zcha.in/v2/mainnet/accounts/t3Vz22vK5z2LcKEdg16Yv4FFneEL1zg9ojd/recv?limit=5&offset=0
