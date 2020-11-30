@@ -11,11 +11,21 @@ class Account
 
   def initialize(account_hash)
     account_hash.each { |key, value| send("#{key}=", value) }
-    @@all << self
+    #@@all << self
   end
 
-  def self.all
-    @@all
+  def self.recent
+    response = HTTParty.get("https://api.zcha.in/v2/mainnet/accounts?sort=lastSeen&direction=descending&limit=20&offset=0")
+    begin
+      parsed = JSON.parse(response.body)
+      recent_accts = []
+      parsed.each do |account|
+        recent_accts.push(new(account))
+      end
+      recent_accts
+    rescue JSON::ParserError => e
+      false
+    end
   end
 
   def self.find_by_address(address)
