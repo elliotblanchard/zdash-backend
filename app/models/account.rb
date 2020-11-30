@@ -10,7 +10,7 @@ class Account
   @@all = []
 
   def initialize(account_hash)
-    account_hash.each {|key, value| self.send(("#{key}="), value)}
+    account_hash.each { |key, value| send("#{key}=", value) }
     @@all << self
   end
 
@@ -19,7 +19,6 @@ class Account
   end
 
   def self.find_by_address(address)
-    account_hash = Hash.new
 
     # make api call for account info
     response = HTTParty.get("https://api.zcha.in/v2/mainnet/accounts/#{address}")
@@ -31,32 +30,30 @@ class Account
     end
 
     # make api call for last 20 transactions sent
-    # https://api.zcha.in/v2/mainnet/accounts/t3Vz22vK5z2LcKEdg16Yv4FFneEL1zg9ojd/sent?limit=20&offset=0&sort=timestamp&direction=descending
     response = HTTParty.get("https://api.zcha.in/v2/mainnet/accounts/#{address}/sent?limit=20&offset=0&sort=timestamp&direction=descending")
     begin
       parsed = JSON.parse(response.body)
-      sentTrans = []
+      sent_trans = []
       parsed.each do |transaction|
-        sentTrans.push(AccountTransaction.new(transaction))
+        sent_trans.push(AccountTransaction.new(transaction))
       end
-      account_hash[:sentTrans] = sentTrans
+      account_hash[:sentTrans] = sent_trans
     rescue JSON::ParserError => e
       return false
     end
 
     # make api call for last 20 transations rec'd
-    # https://api.zcha.in/v2/mainnet/accounts/t3Vz22vK5z2LcKEdg16Yv4FFneEL1zg9ojd/recv?limit=20&offset=0&sort=timestamp&direction=descending
     response = HTTParty.get("https://api.zcha.in/v2/mainnet/accounts/#{address}/recv?limit=20&offset=0&sort=timestamp&direction=descending")
     begin
       parsed = JSON.parse(response.body)
-      recvTrans = []
+      recv_trans = []
       parsed.each do |transaction|
-        recvTrans.push(AccountTransaction.new(transaction))
+        recv_trans.push(AccountTransaction.new(transaction))
       end
-      account_hash[:recvTrans] = recvTrans
-      return self.new(account_hash)
+      account_hash[:recvTrans] = recv_trans
+      new(account_hash)
     rescue JSON::ParserError => e
-      return false
+      false
     end
 
   end

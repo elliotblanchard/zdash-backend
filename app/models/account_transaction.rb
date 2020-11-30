@@ -5,7 +5,7 @@ class AccountTransaction
   @@all = []
   
   def initialize(account_hash)
-    account_hash.each {|key, value| self.send(("#{key}="), value)}
+    account_hash.each { |key, value| send("#{key}=", value) }
     @@all << self
   end
   
