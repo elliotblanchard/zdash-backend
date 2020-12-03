@@ -8,8 +8,8 @@ class Network
 
   @@all = []
 
-  def initialize(account_hash)
-    account_hash.each { |key, value| send("#{key}=", value) }
+  def initialize(network_hash)
+    network_hash.each { |key, value| send("#{key}=", value) }
     @@all << self
   end
 
@@ -17,7 +17,7 @@ class Network
     @@all
   end
 
-  def self.network_status    
+  def self.network_status
     # https://api.zcha.in/v2/mainnet/network
 
     # make api call for account info
