@@ -17,19 +17,19 @@ class Network
     @@all
   end
 
-  def self.network_status
+  # def self.network_status
     # https://api.zcha.in/v2/mainnet/network
 
     # make api call for account info
-    response = HTTParty.get("https://api.zcha.in/v2/mainnet/network")
-    begin
-      parsed = JSON.parse(response.body)
-      network_hash = parsed
-      new(network_hash)
-    rescue JSON::ParserError => e
-      false
-    end
+  #  response = HTTParty.get("https://api.zcha.in/v2/mainnet/network")
+  #  begin
+  #    parsed = JSON.parse(response.body)
+  #    network_hash = parsed
+  #    new(network_hash)
+  #  rescue JSON::ParserError => e
+  #    false
+  #  end
 
-  end
+  #end
  
 end
