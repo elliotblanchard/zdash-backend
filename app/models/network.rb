@@ -1,5 +1,5 @@
-require 'json'
-require 'httparty'
+# require 'json'
+# require 'httparty'
 require 'pry'
 
 class Network

@@ -7,7 +7,7 @@ class ApplicationController < ActionController::API
     response = HTTParty.get("#{uri_base}#{uri}")
     begin
       parsed = JSON.parse(response.body)
-      rescue JSON::ParserError => e
+    rescue JSON::ParserError => e
         false
       end
     end
