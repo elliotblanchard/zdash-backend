@@ -1,6 +1,8 @@
 class Api::V1::TransactionsController < ApplicationController
 
   def index
+    # Replace this Date with a Time object for yesterday:
+    # 1.day.ago
     epoch_range = datetime_to_epoch_range(Date.yesterday)
 
     # For now simply returning all transactions from previous day (GMT)
