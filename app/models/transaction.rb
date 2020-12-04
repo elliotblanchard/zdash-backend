@@ -18,9 +18,6 @@ class Transaction < ApplicationRecord
     # f0d27409c193fef51b66a922794583f08c880ab220229c813995143e1cd244d5
     # c13632d045a685dfead48b62ceb8d0adb188fef9e3f902c65112a88a4dbed4fe
 
-    # This code block gets moved into external module that backend
-    # and API scraper can both share
-
     # transaction = self.find_by(zhash: zhash)
 
     if transaction
