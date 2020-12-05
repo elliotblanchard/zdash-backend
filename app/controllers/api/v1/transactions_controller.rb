@@ -65,7 +65,7 @@ class Api::V1::TransactionsController < ApplicationController
     # date.to_time.in_time_zone('London').end_of_day
     # date.to_time.in_time_zone('London').end_of_day.to_i (convert to Unix Epoch time)
     # tz = timezone("Europe/Athens") # Eastern European Time, UTC+2
-    # Time.new(2002, 10, 31, 2, 2, 2, tz) #=> 2002-10-31 02:02:02 +0200    
+    # Time.new(2002, 10, 31, 2, 2, 2, tz) #=> 2002-10-31 02:02:02 +0200
     # time = Time.now
     # time.end_of_hour() / end_of_week() / end_of_month() / end_of_quarter() / end_of_year()
     # time.beginning_of_hour() / etc...

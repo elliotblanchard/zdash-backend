@@ -7,7 +7,10 @@ class Transaction < ApplicationRecord
     transactions = all
     transactions.each do |transaction| 
       category = classify(transaction)
-      transaction.update(category: category)
+      
+      if !transaction.update(category: category)
+        transaction.destroy # Because duplicate zhash
+      end      
     end
   end
 
@@ -19,6 +22,8 @@ class Transaction < ApplicationRecord
     # c13632d045a685dfead48b62ceb8d0adb188fef9e3f902c65112a88a4dbed4fe
 
     # transaction = self.find_by(zhash: zhash)
+
+    # to find transactions with nil categories: t = Transaction.where(category: nil)
 
     if transaction
       if transaction.vin.length > 2
