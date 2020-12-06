@@ -7,8 +7,8 @@ class Transaction < ApplicationRecord
     transactions = all
     transactions.each do |transaction| 
       category = classify(transaction)
-      
-      if !transaction.update(category: category)
+
+      unless transaction.update(category: category)
         transaction.destroy # Because duplicate zhash
       end      
     end
