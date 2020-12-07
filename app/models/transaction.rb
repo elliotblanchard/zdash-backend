@@ -10,7 +10,7 @@ class Transaction < ApplicationRecord
 
       unless transaction.update(category: category)
         transaction.destroy # Because duplicate zhash
-      end      
+      end
     end
   end
 
