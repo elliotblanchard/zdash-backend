@@ -30,8 +30,8 @@ class Api::V1::TransactionsController < ApplicationController
     body = {}
     transactions = []
 
-    header[:time_unit] = time_unit
-    response[:header] = header
+    # header[:time_unit] = time_unit
+    # response[:header] = header
 
     # Needs to be a check in here for the 'weekly', 'monthly', 'quarterly' that it dosen't 
     # try to go past the current day - 1
@@ -41,19 +41,22 @@ class Api::V1::TransactionsController < ApplicationController
         hour = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
         epoch_range = time_to_epoch_range(time_unit, hour)
         time_interval = {}
+        time_interval[:unit] = time_unit
+        time_interval[:number] = i
         time_interval[:time] = hour.to_i
         time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
         # Next line is only for QA remove for performance
-        # time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
+        time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
         time_interval[:transactions] = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
         transactions.push(time_interval)
       end
     end
 
-    body[:transactions] = transactions
-    response[:body] = body
+    #body[:transactions] = transactions
+    #response[:body] = body
+    #response
 
-    response
+    transactions
   end
 
   def time_to_epoch_range(time_unit, time)
