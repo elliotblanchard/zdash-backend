@@ -47,7 +47,14 @@ class Api::V1::TransactionsController < ApplicationController
         time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
         # Next line is only for QA remove for performance
         time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
-        time_interval[:transactions] = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+        # time_interval[:categories] = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+        category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+        category_array = []
+        category_hash.each do |item|
+          item[0] = item[0].gsub('_', ' ').titleize
+          category_array.push(item)
+        end
+        time_interval[:categories] = category_array
         transactions.push(time_interval)
       end
     end
