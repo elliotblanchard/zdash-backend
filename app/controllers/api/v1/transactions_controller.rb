@@ -17,7 +17,7 @@ class Api::V1::TransactionsController < ApplicationController
     
     # @transactions = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end])
     
-    @transactions = get_transactions('hourly', 1.day.ago)
+    @transactions = get_transactions('day', 1.day.ago)
     render json: @transactions
   end
 
@@ -36,7 +36,7 @@ class Api::V1::TransactionsController < ApplicationController
     # Needs to be a check in here for the 'weekly', 'monthly', 'quarterly' that it dosen't 
     # try to go past the current day - 1
 
-    if time_unit == 'hourly'
+    if time_unit == 'day'
       for i in 0..23
         hour = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
         epoch_range = time_to_epoch_range(time_unit, hour)
@@ -81,7 +81,7 @@ class Api::V1::TransactionsController < ApplicationController
 
     epoch_range = {}
 
-    if time_unit == 'hourly'
+    if time_unit == 'day'
       epoch_range[:start] = time.beginning_of_hour.to_i
       epoch_range[:end] = time.end_of_hour.to_i
     end
