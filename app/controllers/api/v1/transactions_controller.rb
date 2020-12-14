@@ -1,6 +1,6 @@
 class Api::V1::TransactionsController < ApplicationController
 
-  def index
+  def show
     # Replace this Date with a Time object for yesterday:
     # 1.day.ago
     # epoch_range = datetime_to_epoch_range(Date.yesterday)
@@ -17,7 +17,10 @@ class Api::V1::TransactionsController < ApplicationController
     
     # @transactions = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end])
     
-    @transactions = get_transactions('day', 1.day.ago)
+    case params[:id]
+    when 'day' then @transactions = get_transactions('day', 1.day.ago)
+    when 'week' then @transactions = get_transactions('week', 1.week.ago - 1.day)
+    end
     render json: @transactions
   end
 
@@ -36,28 +39,61 @@ class Api::V1::TransactionsController < ApplicationController
     # Needs to be a check in here for the 'weekly', 'monthly', 'quarterly' that it dosen't 
     # try to go past the current day - 1
 
-    if time_unit == 'day'
-      for i in 0..23
-        hour = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
-        epoch_range = time_to_epoch_range(time_unit, hour)
-        time_interval = {}
-        time_interval[:unit] = time_unit
-        time_interval[:number] = i
-        time_interval[:time] = hour.to_i
-        time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-        # Next line is only for QA remove for performance
-        time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
-        # time_interval[:categories] = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-        category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-        category_array = []
-        category_hash.each do |item|
-          item[0] = item[0].gsub('_', ' ').titleize
-          category_array.push(item)
-        end
-        time_interval[:categories] = category_array
-        transactions.push(time_interval)
+    #if time_unit == 'day'
+    #  for i in 0..23
+    #    hour = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
+    #    epoch_range = time_to_epoch_range(time_unit, hour)
+    #    time_interval = {}
+    #    time_interval[:unit] = time_unit
+    #    time_interval[:number] = i
+    #    time_interval[:time] = hour.to_i
+    #    time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+    #    # Next line is only for QA remove for performance
+    #    time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
+    #    # time_interval[:categories] = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+    #    category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+    #    category_array = []
+    #    category_hash.each do |item|
+    #      item[0] = item[0].gsub('_', ' ').titleize
+    #      category_array.push(item)
+    #    end
+    #    time_interval[:categories] = category_array
+    #    transactions.push(time_interval)
+    #  end
+    #elsif time_unit == 'week'
+    #  for i in 0..6
+    #    day = Time.new(time.year, time.month, time.day+i, 0, 0, 0, utc_offset)
+    #    epoch_range = time_to_epoch_range(time_unit, day)
+    #  end
+    #end
+
+    case time_unit
+    when 'day' then interval_number = 23
+    when 'week' then interval_number = 6
+    end    
+
+    for i in 0..interval_number
+      case time_unit
+      when 'day' then interval = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
+      when 'week' then interval = Time.new(time.year, time.month, time.day+i, 0, 0, 0, utc_offset)
+      end       
+      epoch_range = time_to_epoch_range(time_unit, interval)
+      time_interval = {}
+      time_interval[:unit] = time_unit
+      time_interval[:number] = i
+      time_interval[:time] = interval.to_i
+      time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+      # Next line is only for QA remove for performance
+      time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
+      category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
+      category_array = []
+      category_hash.each do |item|
+        item[0] = item[0].gsub('_', ' ').titleize
+        category_array.push(item)
       end
-    end
+      time_interval[:categories] = category_array
+      transactions.push(time_interval)
+    end    
 
     #body[:transactions] = transactions
     #response[:body] = body
@@ -91,6 +127,9 @@ class Api::V1::TransactionsController < ApplicationController
     if time_unit == 'day'
       epoch_range[:start] = time.beginning_of_hour.to_i
       epoch_range[:end] = time.end_of_hour.to_i
+    elsif time_unit == 'week'
+      epoch_range[:start] = time.beginning_of_day.to_i
+      epoch_range[:end] = time.end_of_day.to_i
     end
 
     epoch_range
