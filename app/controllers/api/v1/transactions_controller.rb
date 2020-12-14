@@ -70,12 +70,12 @@ class Api::V1::TransactionsController < ApplicationController
     case time_unit
     when 'day' then interval_number = 23
     when 'week' then interval_number = 6
-    end    
+    end
 
     for i in 0..interval_number
       case time_unit
       when 'day' then interval = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
-      when 'week' then interval = Time.new(time.year, time.month, time.day+i, 0, 0, 0, utc_offset)
+      when 'week' then interval = Time.new(time.year, time.month, time.day + i, 0, 0, 0, utc_offset)
       end       
       epoch_range = time_to_epoch_range(time_unit, interval)
       time_interval = {}
@@ -93,7 +93,7 @@ class Api::V1::TransactionsController < ApplicationController
       end
       time_interval[:categories] = category_array
       transactions.push(time_interval)
-    end    
+    end
 
     #body[:transactions] = transactions
     #response[:body] = body
