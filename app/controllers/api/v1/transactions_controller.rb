@@ -76,19 +76,19 @@ class Api::V1::TransactionsController < ApplicationController
       case time_unit
       when 'day' then interval = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
       when 'week' then interval = Time.new(time.year, time.month, time.day + i, 0, 0, 0, utc_offset)
-      end       
+      end
       epoch_range = time_to_epoch_range(time_unit, interval)
       time_interval = {}
       time_interval[:unit] = time_unit
       case time_unit
       when 'day' then time_interval[:interval] = 'hour'
       when 'week' then time_interval[:interval] = 'day'
-      end      
+      end
       time_interval[:number] = i
       time_interval[:time] = interval.to_i
       time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
       # Next line is only for QA remove for performance
-      time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
+      # time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
       category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
       category_array = []
       category_hash.each do |item|
