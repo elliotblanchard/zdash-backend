@@ -86,6 +86,10 @@ class Api::V1::TransactionsController < ApplicationController
       end
       time_interval[:number] = i
       time_interval[:time] = interval.to_i
+      case time_unit
+      when 'day' then time_interval[:interval] = interval.strftime('%l %p')
+      when 'week' then time_interval[:display_time] = interval.strftime('%a %-m/%d')
+      end      
       time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
       # Next line is only for QA remove for performance
       # time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
