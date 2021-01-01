@@ -72,6 +72,7 @@ class Api::V1::TransactionsController < ApplicationController
     # Transaction.group(:category).where(timestamp: 1608422461..1608508799).count
     # Response times:
     # 335.1ms at total count of 334,444
+    # You should look into creating a db INDEX on the timestamp col!!!
 
     case time_unit
     when 'day' then interval_number = 23
