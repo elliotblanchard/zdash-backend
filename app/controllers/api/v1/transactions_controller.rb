@@ -68,6 +68,11 @@ class Api::V1::TransactionsController < ApplicationController
     #  end
     #end
 
+    # Epoch range for one day: 1608422461..1608508799
+    # Transaction.group(:category).where(timestamp: 1608422461..1608508799).count
+    # Response times:
+    # 335.1ms at total count of 334,444
+
     case time_unit
     when 'day' then interval_number = 23
     when 'week' then interval_number = 6
