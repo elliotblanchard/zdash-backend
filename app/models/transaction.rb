@@ -4,6 +4,22 @@ class Transaction < ApplicationRecord
   validates :zhash, uniqueness: true 
 
   def self.classify_all
+    
+    transactions = Transaction.where("category = 'transparent_coinbase'")
+
+    print("#{(transactions.length)}")
+    transactions.each_with_index do |transaction, idx|
+      if idx % 100 == 0
+        print("#{((idx.to_f/transactions.length) * 100).round(2)} complete") 
+      end
+      category = classify(transaction)
+
+      unless transaction.update(category: category)
+        transaction.destroy # Because duplicate zhash
+      end
+    end    
+
+=begin
     transactions = all
     transactions.each do |transaction| 
       category = classify(transaction)
@@ -12,6 +28,7 @@ class Transaction < ApplicationRecord
         transaction.destroy # Because duplicate zhash
       end
     end
+=end
   end
 
   def self.classify(transaction)
@@ -28,8 +45,7 @@ class Transaction < ApplicationRecord
     if transaction
       if transaction.vin.length > 2
         parsed = transaction.vin.split(',')
-        #if parsed[0].length > 18 # this is wrong - you need to look for the string "coinbase"
-        if parsed[0].include? "coinbase" 
+        if parsed[0].length > 18 # this is wrong - you need to look for the string "coinbase"
           # vin arr contains coinbase field w/address
           # !!! check this carefully to see that it works
           if transaction.vout.length > 2
@@ -39,6 +55,7 @@ class Transaction < ApplicationRecord
           end
         else
           if transaction.vout.length > 2
+            print "Wrong category"
             'transparent'
           else
             if transaction.vjoinsplit.length > 2
