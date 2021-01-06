@@ -71,7 +71,8 @@ class Api::V1::TransactionsController < ApplicationController
     # Epoch range for one day: 1608422461..1608508799
     # Transaction.group(:category).where(timestamp: 1608422461..1608508799).count
     # Response times:
-    # 335.1ms at total count of 334,444
+    # 335.1ms at total count of   334,444
+    # 734.2ms at total count of 2,309,249
     # You should look into creating a db INDEX on the timestamp col!!!
 
     case time_unit
