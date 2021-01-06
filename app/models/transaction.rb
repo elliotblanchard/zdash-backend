@@ -14,6 +14,18 @@ class Transaction < ApplicationRecord
     end
   end
 
+  def self.classify_nil
+    transactions = Transaction.where(category: nil)
+    binding.pry
+    transactions.each do |transaction| 
+      category = classify(transaction)
+
+      unless transaction.update(category: category)
+        transaction.destroy # Because duplicate zhash
+      end
+    end
+  end  
+
   def self.classify(transaction)
     # Some example transaction hashes:
     # d456a889ddc87ad41e379de5bb245781333fd883b67bf34eebabd1a6fb7e144a
@@ -28,7 +40,7 @@ class Transaction < ApplicationRecord
     if transaction
       if transaction.vin.length > 2
         parsed = transaction.vin.split(',')
-        if parsed[0].length > 18 # this is wrong - you need to look for the string "coinbase"
+        if parsed[0].length > 18
           # vin arr contains coinbase field w/address
           # !!! check this carefully to see that it works
           if transaction.vout.length > 2
@@ -56,7 +68,7 @@ class Transaction < ApplicationRecord
           end
         else
           if transaction.vjoinsplit.length > 2
-            if transaction.vShieldedOutput > 0.0
+            if ( transaction.vShieldedOutput && (transaction.vShieldedOutput > 0.0) ) 
               'migration'
             else
               'sprout_shielded'
