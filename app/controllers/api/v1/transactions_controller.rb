@@ -21,6 +21,7 @@ class Api::V1::TransactionsController < ApplicationController
     when 'day' then @transactions = get_transactions('day', 1.day.ago)
     when 'week' then @transactions = get_transactions('week', 1.week.ago - 1.day)
     when 'month' then @transactions = get_transactions('month', 1.month.ago - 1.day)
+    when 'year' then @transactions = get_transactions('year', 1.year.ago - 1.day)
     end
     render json: @transactions
   end
@@ -79,16 +80,17 @@ class Api::V1::TransactionsController < ApplicationController
     when 'day' then interval_number = 23
     when 'week' then interval_number = 6
     when 'month' then interval_number = ((((1.day.ago - (time)) / 60) / 60) / 24).round
+    when 'year' then interval_number = 11
     end
 
     for i in 0..interval_number
-      puts (i)
-      #binding.pry
       case time_unit
       when 'day' then interval = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
       when 'week' then interval = time + (i * (60 * 60 * 24)) # One day
       when 'month' then interval = time + (i * (60 * 60 * 24)) # One day
+      when 'year' then interval = Time.new(time.year, time.month + i, time.day, 0, 0, 0, utc_offset)
       end
+      puts("Interval is: #{interval}")
       epoch_range = time_to_epoch_range(time_unit, interval)
       time_interval = {}
       time_interval[:unit] = time_unit
@@ -96,6 +98,7 @@ class Api::V1::TransactionsController < ApplicationController
       when 'day' then time_interval[:interval] = 'hour'
       when 'week' then time_interval[:interval] = 'day'
       when 'month' then time_interval[:interval] = 'day'
+      when 'year' then time_interval[:interval] = 'year'
       end
       time_interval[:number] = i
       time_interval[:time] = interval.to_i
@@ -103,10 +106,9 @@ class Api::V1::TransactionsController < ApplicationController
       when 'day' then time_interval[:display_time] = interval.strftime('%l%p')
       when 'week' then time_interval[:display_time] = interval.strftime('%a %-m/%d')
       when 'month' then time_interval[:display_time] = interval.strftime('%a %-m/%d')
+      when 'year' then time_interval[:display_time] = interval.strftime('%b %y')
       end
       time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-      # Next line is only for QA remove for performance
-      # time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
       category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
       category_array = []
       category_hash.each do |item|
@@ -116,10 +118,6 @@ class Api::V1::TransactionsController < ApplicationController
       time_interval[:categories] = category_array
       transactions.push(time_interval)
     end
-
-    #body[:transactions] = transactions
-    #response[:body] = body
-    #response
 
     transactions
   end
@@ -155,6 +153,9 @@ class Api::V1::TransactionsController < ApplicationController
     elsif time_unit == 'month'
       epoch_range[:start] = time.beginning_of_day.to_i
       epoch_range[:end] = time.end_of_day.to_i
+    elsif time_unit == 'year'
+      epoch_range[:start] = time.beginning_of_month.to_i
+      epoch_range[:end] = time.end_of_month.to_i      
     end
 
     epoch_range
