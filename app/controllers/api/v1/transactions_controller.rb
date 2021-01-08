@@ -83,7 +83,7 @@ class Api::V1::TransactionsController < ApplicationController
     when 'year' then interval_number = 11
     end
 
-    for i in 0..interval_number
+    (0..interval_number).each do |i|
       case time_unit
       when 'day' then interval = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
       when 'week' then interval = time + (i * (60 * 60 * 24)) # One day
@@ -155,7 +155,7 @@ class Api::V1::TransactionsController < ApplicationController
       epoch_range[:end] = time.end_of_day.to_i
     elsif time_unit == 'year'
       epoch_range[:start] = time.beginning_of_month.to_i
-      epoch_range[:end] = time.end_of_month.to_i      
+      epoch_range[:end] = time.end_of_month.to_i
     end
 
     epoch_range
