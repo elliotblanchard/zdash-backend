@@ -8,7 +8,7 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
    allow do
      #origins '*'
-     origins 'zdash.info'
+     origins 'https://www.zdash.info'
 
      resource '*',
        headers: :any,
