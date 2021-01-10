@@ -6,6 +6,7 @@ ruby '2.6.1'
 gem "colorize", "~> 0.8.1"
 gem 'httparty', '~> 0.18.1'
 gem 'pry', '~> 0.13.1'
+gem 'activerecord-import', '~> 1.0', '>= 1.0.7'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.0.3', '>= 6.0.3.4'
