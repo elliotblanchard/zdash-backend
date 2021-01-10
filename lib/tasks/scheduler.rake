@@ -4,7 +4,6 @@ task :get_latest_transactions => :environment do
   require 'json'
   require 'open-uri'
   require 'pry'
-  require 'colorize'
   
   puts 'Updating transactions...'
 
@@ -74,15 +73,15 @@ task :get_latest_transactions => :environment do
       transaction_time = Time.at(transaction['timestamp']).to_datetime.strftime('%I:%M%p %a %m/%d/%y')
 
       print("\n#{offset + index + 1}. ")
-      print("#{transaction['hash'][0..5]}... ").colorize(:light_blue)
+      print("#{transaction['hash'][0..5]}... ")
       print('category ')
-      print("#{t['category']}. ").colorize(:light_blue)
+      print("#{t['category']}. ")
       print('at ')
-      print("#{transaction_time} ").colorize(:yellow)
+      print("#{transaction_time} ")
       print("timestamp: #{transaction['timestamp']} ")
       print('/ ')
-      print("#{transaction['timestamp'] - last_timestamp} ").colorize(:blue)  
-    end
+      print("#{transaction['timestamp'] - last_timestamp} ")
+
     offset += offset_increment
     current_timestamp = transactions.last['timestamp']
   end
