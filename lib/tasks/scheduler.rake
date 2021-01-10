@@ -89,5 +89,4 @@ task :get_latest_transactions => :environment do
   
   print("Finished getting latest transactions. #{latest_transactions.length} processed.\n")
   print("Current time is: #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n\n")
-  print("Latest timestamp is: #{Transaction.maximum('timestamp')}")
 end
