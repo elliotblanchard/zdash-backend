@@ -5,7 +5,7 @@ task :get_latest_transactions => :environment do
   require 'open-uri'
   require 'pry'
   
-  puts 'Updating transactions...'
+  puts "Updating transactions..."
 
   offset = 0
   offset_increment = 15
@@ -20,8 +20,7 @@ task :get_latest_transactions => :environment do
 
   print("Getting new transactions. Last timestamp is: #{last_timestamp}\n")
 
-  while (last_timestamp - overlap) < current_timestamp  
-  
+  while (last_timestamp - overlap) < current_timestamp
     request_uri = "#{uri_base}#{max_block_size}&offset=#{offset}"
 
     begin
@@ -81,7 +80,7 @@ task :get_latest_transactions => :environment do
       print("timestamp: #{transaction['timestamp']} ")
       print('/ ')
       print("#{transaction['timestamp'] - last_timestamp} ")
-
+    end
     offset += offset_increment
     current_timestamp = transactions.last['timestamp']
   end
