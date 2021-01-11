@@ -1,7 +1,7 @@
 class Transaction < ApplicationRecord
 
   validates :zhash, presence: true
-  validates :zhash, uniqueness: true 
+  validates :zhash, uniqueness: true
 
   def self.classify_all
     transactions = all
@@ -16,7 +16,6 @@ class Transaction < ApplicationRecord
 
   def self.classify_nil
     transactions = Transaction.where(category: nil)
-    binding.pry
     transactions.each do |transaction| 
       category = classify(transaction)
 
@@ -40,7 +39,7 @@ class Transaction < ApplicationRecord
     if transaction
       if transaction.vin.length > 2
         parsed = transaction.vin.split(',')
-        if parsed[0].length > 18
+        if ( (parsed[0].length > 18) && (parsed[0].include? 'coinbase'))
           # vin arr contains coinbase field w/address
           # !!! check this carefully to see that it works
           if transaction.vout.length > 2
