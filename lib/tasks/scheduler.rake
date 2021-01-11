@@ -85,7 +85,7 @@ task :get_latest_transactions => :environment do
     current_timestamp = transactions.last['timestamp']
   end
   
-  Transaction.import latest_transactions # Import all transactions to the db at same time to speed things up
+  Transaction.import latest_transactions, validate_uniqueness: true # Import all transactions to the db at same time to speed things up
   
   print("Finished getting latest transactions. #{latest_transactions.length} processed.\n")
   print("Current time is: #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n\n")
