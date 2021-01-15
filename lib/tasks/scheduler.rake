@@ -11,6 +11,7 @@ task :get_latest_transactions => :environment do
   offset_increment = 15
   overlap = 300 # 5 minutes
   last_timestamp = Transaction.maximum('timestamp')
+  #last_timestamp = 1610574707 #You need to remove all duplicates after this timestamp
   current_timestamp = Float::INFINITY
   max_block_size = 20
   retry_pause = 30
@@ -85,8 +86,12 @@ task :get_latest_transactions => :environment do
     current_timestamp = transactions.last['timestamp']
   end
   
-  Transaction.import latest_transactions, validate_uniqueness: true # Import all transactions to the db at same time to speed things up
+  Transaction.import latest_transactions # Import all transactions to the db at same time to speed things up
   
   print("Finished getting latest transactions. #{latest_transactions.length} processed.\n")
   print("Current time is: #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n\n")
+end
+
+task :remove_duplicates => :environment do
+  print("In remove duplicates.")
 end
