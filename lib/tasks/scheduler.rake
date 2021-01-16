@@ -11,7 +11,6 @@ task :get_latest_transactions => :environment do
   offset_increment = 15
   overlap = 300 # 5 minutes
   last_timestamp = Transaction.maximum('timestamp')
-  #last_timestamp = 1610574707 #You need to remove all duplicates after this timestamp
   current_timestamp = Float::INFINITY
   max_block_size = 20
   retry_pause = 30
@@ -89,9 +88,49 @@ task :get_latest_transactions => :environment do
   Transaction.import latest_transactions # Import all transactions to the db at same time to speed things up
   
   print("Finished getting latest transactions. #{latest_transactions.length} processed.\n")
+
+  # Now we need to remove duplicates - because activerecord-import ignores uniqueness validations, 
+  # We have to check outselves - this is still much faster than the alternatives  
+
+  all_transactions = Transaction.where("timestamp > '#{last_timestamp}'")
+  unique_transactions = all_transactions.uniq { |transaction| transaction.zhash }
+  group_by_zhash = all_transactions.group_by { |transaction| transaction.zhash }
+
+  print("Removing duplicates...\n")
+  print("Transactions since timestamp: #{last_timestamp}: #{all_transactions.count}\n")
+  print("Unique transactions: #{unique_transactions.count}\n")
+  print("Duplicates: #{all_transactions.count - unique_transactions.count}\n")
+  print("Size of group_by_zhash: #{group_by_zhash.length}\n")
+
+  group_by_zhash.each do |key, array|
+    if array.length > 1
+      array.pop() # Pop one off the array
+     # Destroy the rest
+      array.each { |transaction| transaction.destroy }
+    end
+  end  
+
   print("Current time is: #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n\n")
 end
 
 task :remove_duplicates => :environment do
-  print("In remove duplicates.")
+  last_timestamp = 1610574707 #You need to remove all duplicates after this timestamp
+  all_transactions = Transaction.where("timestamp > '#{last_timestamp}'")
+  unique_transactions = all_transactions.uniq { |transaction| transaction.zhash }
+  group_by_zhash = all_transactions.group_by { |transaction| transaction.zhash }
+
+  print("In remove duplicates.\n")
+  print("Transactions since timestamp: #{last_timestamp}: #{all_transactions.count}\n")
+  print("Unique transactions: #{unique_transactions.count}\n")
+  print("Duplicates: #{all_transactions.count - unique_transactions.count}\n")
+  print("Size of group_by_zhash: #{group_by_zhash.length}\n")
+
+  group_by_zhash.each do |key, array|
+    if array.length > 1
+      array.pop() # Pop one off the array
+     # Destroy the rest
+      array.each { |transaction| transaction.destroy }
+    end
+  end
+  
 end
