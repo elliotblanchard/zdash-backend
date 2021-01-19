@@ -115,7 +115,8 @@ class Api::V1::TransactionsController < ApplicationController
         item[0] = item[0].gsub('_', ' ').titleize
         category_array.push(item)
       end
-      time_interval[:categories] = category_array
+      sorted_category_array = category_array.sort_by { |category| category[0] }
+      time_interval[:categories] = sorted_category_array
       transactions.push(time_interval)
     end
 

@@ -83,10 +83,15 @@ task :get_latest_transactions => :environment do
     end
     offset += offset_increment
     current_timestamp = transactions.last['timestamp']
+    print("\nLatest_transactions.length: #{latest_transactions.length}\n")
+    if latest_transactions.length > 500
+      print("\n\n\nImporting #{latest_transactions.length} transactions.\n\n\n")
+      Transaction.import latest_transactions
+      latest_transactions = []
+    end
   end
   
-  Transaction.import latest_transactions # Import all transactions to the db at same time to speed things up
-  
+  Transaction.import latest_transactions # Import any remaining transactions to the db 
   print("Finished getting latest transactions. #{latest_transactions.length} processed.\n")
 
   # Now we need to remove duplicates - because activerecord-import ignores uniqueness validations, 
