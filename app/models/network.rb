@@ -1,7 +1,3 @@
-# require 'json'
-# require 'httparty'
-require 'pry'
-
 class Network
 
   attr_accessor :name, :accounts, :transactions, :blockHash, :blockNumber, :difficulty, :hashrate, :meanBlockTime, :peerCount, :protocolVersion, :relayFee, :version, :subVersion, :totalAmount, :sproutPool, :saplingPool  
