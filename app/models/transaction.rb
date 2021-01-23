@@ -41,11 +41,15 @@ class Transaction < ApplicationRecord
         parsed = transaction.vin.split(',')
         if ( (parsed[0].length > 18) && (parsed[0].include? 'coinbase'))
           # vin arr contains coinbase field w/address
-          # !!! check this carefully to see that it works
-          if transaction.vout.length > 2
-            'transparent_coinbase'
-          else
+          # This next if / else is custom to the blockchain
+          # due to differences in way zcash-cli (blockchain)
+          # and zcha.in API (ongoing) report vShieldedOutput
+          # zcash-cli reports it as an array, while zcha.in
+          # reports as a float
+          if transaction.vShieldedOutput.to_f > 0
             'shielded_coinbase'
+          else
+            'transparent_coinbase'
           end
         else
           if transaction.vout.length > 2
