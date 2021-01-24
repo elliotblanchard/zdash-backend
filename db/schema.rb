@@ -41,7 +41,7 @@ ActiveRecord::Schema.define(version: 2021_01_20_140620) do
     t.text "vin"
     t.text "vout"
     t.text "vjoinsplit"
-    t.decimal "vShieldedOutput"
+    t.text "vShieldedOutput"
     t.decimal "vShieldedSpend"
     t.decimal "valueBalance"
     t.decimal "value"

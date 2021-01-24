@@ -46,7 +46,7 @@ class Transaction < ApplicationRecord
           # and zcha.in API (ongoing) report vShieldedOutput
           # zcash-cli reports it as an array, while zcha.in
           # reports as a float
-          if transaction.vShieldedOutput.to_f > 0
+          if transaction.vShieldedOutput.to_f > 0.0
             'shielded_coinbase'
           else
             'transparent_coinbase'
