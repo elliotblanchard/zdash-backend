@@ -75,8 +75,8 @@ class Api::V1::TransactionsController < ApplicationController
         if time_unit != 'day'
           cache_new = Cache.create(
             timestamp_start: epoch_range[:start],
-            timestamp_end: epoch_range[:end], 
-            total: time_interval[:total], 
+            timestamp_end: epoch_range[:end],
+            total: time_interval[:total],
             category_hash: category_hash
           )
         end
