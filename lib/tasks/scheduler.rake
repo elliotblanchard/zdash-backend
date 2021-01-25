@@ -94,8 +94,8 @@ task :get_latest_transactions => :environment do
   Transaction.import latest_transactions # Import any remaining transactions to the db 
   print("Finished getting latest transactions. #{latest_transactions.length} processed.\n")
 
-  # Now we need to remove duplicates - because activerecord-import ignores uniqueness validations, 
-  # We have to check outselves - this is still much faster than the alternatives  
+  # Now we need to remove duplicates - because activerecord-import ignores uniqueness validations,
+  # We have to check outselves - this is still much faster than the alternative
 
   all_transactions = Transaction.where("timestamp > '#{last_timestamp}'")
   unique_transactions = all_transactions.uniq { |transaction| transaction.zhash }
@@ -119,7 +119,7 @@ task :get_latest_transactions => :environment do
 end
 
 task :remove_duplicates => :environment do
-  last_timestamp = 1610574707 #You need to remove all duplicates after this timestamp
+  last_timestamp = 1610574707
   all_transactions = Transaction.where("timestamp > '#{last_timestamp}'")
   unique_transactions = all_transactions.uniq { |transaction| transaction.zhash }
   group_by_zhash = all_transactions.group_by { |transaction| transaction.zhash }

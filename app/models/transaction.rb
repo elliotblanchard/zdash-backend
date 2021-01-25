@@ -9,7 +9,7 @@ class Transaction < ApplicationRecord
       category = classify(transaction)
 
       unless transaction.update(category: category)
-        transaction.destroy # Because duplicate zhash
+        transaction.destroy # Duplicate zhash
       end
     end
   end
@@ -20,22 +20,12 @@ class Transaction < ApplicationRecord
       category = classify(transaction)
 
       unless transaction.update(category: category)
-        transaction.destroy # Because duplicate zhash
+        transaction.destroy # Duplicate zhash
       end
     end
   end  
 
   def self.classify(transaction)
-    # Some example transaction hashes:
-    # d456a889ddc87ad41e379de5bb245781333fd883b67bf34eebabd1a6fb7e144a
-    # d2ebc0cfd864027eb0887e1dcb772b4d1ca7bc016504889a6843583c2ca73bb4
-    # f0d27409c193fef51b66a922794583f08c880ab220229c813995143e1cd244d5
-    # c13632d045a685dfead48b62ceb8d0adb188fef9e3f902c65112a88a4dbed4fe
-
-    # transaction = self.find_by(zhash: zhash)
-
-    # to find transactions with nil categories: t = Transaction.where(category: nil)
-
     if transaction
       if transaction.vin.length > 2
         parsed = transaction.vin.split(',')

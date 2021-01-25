@@ -1,22 +1,6 @@
 class Api::V1::TransactionsController < ApplicationController
 
   def show
-    # Replace this Date with a Time object for yesterday:
-    # 1.day.ago
-    # epoch_range = datetime_to_epoch_range(Date.yesterday)
-    # epoch_range = datetime_to_epoch_range(1.day.ago)
-
-    # For now simply returning all transactions from previous day (GMT)
-    # Needs to be hourly totals for each transaction type
-
-    # This gets the totals for each category for a given time range:
-    # Transaction.group(:category).where(timestamp: 1606953601..1607039999).count
-    # Returns
-    # => {"sapling_shielded"=>106, "transparent"=>3072, nil=>14, "sapling_deshielding"=>253, 
-    # "transparent_coinbase"=>1137, "sprout_deshielding"=>4, "sapling_shielding"=>214}
-    
-    # @transactions = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end])
-    
     case params[:id]
     when 'day' then @transactions = get_transactions('day', 1.day.ago)
     when 'week' then @transactions = get_transactions('week', 1.week.ago - 1.day)
@@ -35,46 +19,8 @@ class Api::V1::TransactionsController < ApplicationController
     body = {}
     transactions = []
 
-    # header[:time_unit] = time_unit
-    # response[:header] = header
-
-    # Needs to be a check in here for the 'weekly', 'monthly', 'quarterly' that it dosen't 
-    # try to go past the current day - 1
-
-    #if time_unit == 'day'
-    #  for i in 0..23
-    #    hour = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
-    #    epoch_range = time_to_epoch_range(time_unit, hour)
-    #    time_interval = {}
-    #    time_interval[:unit] = time_unit
-    #    time_interval[:number] = i
-    #    time_interval[:time] = hour.to_i
-    #    time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-    #    # Next line is only for QA remove for performance
-    #    time_interval[:example_hash] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).last.zhash
-    #    # time_interval[:categories] = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-    #    category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-    #    category_array = []
-    #    category_hash.each do |item|
-    #      item[0] = item[0].gsub('_', ' ').titleize
-    #      category_array.push(item)
-    #    end
-    #    time_interval[:categories] = category_array
-    #    transactions.push(time_interval)
-    #  end
-    #elsif time_unit == 'week'
-    #  for i in 0..6
-    #    day = Time.new(time.year, time.month, time.day+i, 0, 0, 0, utc_offset)
-    #    epoch_range = time_to_epoch_range(time_unit, day)
-    #  end
-    #end
-
     # Epoch range for one day: 1608422461..1608508799
     # Transaction.group(:category).where(timestamp: 1608422461..1608508799).count
-    # Response times:
-    # 335.1ms at total count of   334,444
-    # 734.2ms at total count of 2,309,249
-    # You should look into creating a db INDEX on the timestamp col!!!
 
     case time_unit
     when 'day' then interval_number = 23
@@ -111,24 +57,22 @@ class Api::V1::TransactionsController < ApplicationController
 
       cache_used = false
 
-      if (time_unit != 'day')
+      if time_unit != 'day'
         # Check if search has been cached for slower queries
         cache_response = Cache.where("timestamp_start = '#{epoch_range[:start]}' and timestamp_end = '#{epoch_range[:end]}'")
-        if (cache_response.length > 0)
-          #print("CACHE USED")
+        if cache_response.length > 0
           time_interval[:total] = cache_response[0].total
           category_hash = cache_response[0].category_hash
           cache_used = true
         end
       end
 
-      if (cache_used == false) 
+      if cache_used == false
         time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
         category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
       
         # If not a day, save for next time
-        if (time_unit != 'day')
-          #print("CACHE ADDED")
+        if time_unit != 'day'
           cache_new = Cache.create(
             timestamp_start: epoch_range[:start],
             timestamp_end: epoch_range[:end], 
@@ -153,7 +97,6 @@ class Api::V1::TransactionsController < ApplicationController
 
   def time_to_epoch_range(time_unit, time)
     # Converts time object to a range of epoch times
-
     # Time zone is (GMT)
     # Example values:
     # Dec 3 range: 1606953601 - 1607039999
