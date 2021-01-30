@@ -1,11 +1,14 @@
 class Api::V1::TransactionsController < ApplicationController
 
+  zcash_first_transaction = Time.new(2016, 10, 28) # Friday, October 28, 2016
+
   def show
     case params[:id]
     when 'day' then @transactions = get_transactions('day', 1.day.ago)
     when 'week' then @transactions = get_transactions('week', 1.week.ago - 1.day)
     when 'month' then @transactions = get_transactions('month', 1.month.ago - 1.day)
     when 'year' then @transactions = get_transactions('year', 1.year.ago - 1.day)
+    when 'all' then @transactions = get_transactions('all', zcash_first_transaction)
     end
     render json: @transactions
   end
