@@ -1,8 +1,8 @@
 class Api::V1::TransactionsController < ApplicationController
 
-  zcash_first_transaction = Time.new(2016, 10, 28) # Friday, October 28, 2016
-
   def show
+    zcash_first_transaction = Time.new(2016, 10, 28) # Friday, October 28, 2016
+
     case params[:id]
     when 'day' then @transactions = get_transactions('day', 1.day.ago)
     when 'week' then @transactions = get_transactions('week', 1.week.ago - 1.day)
@@ -30,6 +30,7 @@ class Api::V1::TransactionsController < ApplicationController
     when 'week' then interval_number = 6
     when 'month' then interval_number = ((((1.day.ago - (time)) / 60) / 60) / 24).round
     when 'year' then interval_number = 11
+    when 'all' then interval_number = (((Time.new().year-1) - time.year) * 12) + (Time.new().month - 1)
     end
 
     (0..interval_number).each do |i|
@@ -38,6 +39,7 @@ class Api::V1::TransactionsController < ApplicationController
       when 'week' then interval = time + (i * (60 * 60 * 24)) # One day
       when 'month' then interval = time + (i * (60 * 60 * 24)) # One day
       when 'year' then interval = Time.new(time.year, time.month + i, time.day, 0, 0, 0, utc_offset)
+      when 'all' then interval = Time.new(time.year + (i/12), time.month + (i%12), time.day, 0, 0, 0, utc_offset)
       end
       puts("Interval is: #{interval}")
       epoch_range = time_to_epoch_range(time_unit, interval)
@@ -47,7 +49,8 @@ class Api::V1::TransactionsController < ApplicationController
       when 'day' then time_interval[:interval] = 'hour'
       when 'week' then time_interval[:interval] = 'day'
       when 'month' then time_interval[:interval] = 'day'
-      when 'year' then time_interval[:interval] = 'year'
+      when 'year' then time_interval[:interval] = 'month'
+      when 'all' then time_interval[:interval] = 'month'
       end
       time_interval[:number] = i
       time_interval[:time] = interval.to_i
@@ -56,6 +59,7 @@ class Api::V1::TransactionsController < ApplicationController
       when 'week' then time_interval[:display_time] = interval.strftime('%a %-m/%d')
       when 'month' then time_interval[:display_time] = interval.strftime('%a %-m/%d')
       when 'year' then time_interval[:display_time] = interval.strftime('%b %y')
+      when 'all' then time_interval[:display_time] = interval.strftime('%b %y')
       end
 
       cache_used = false
@@ -109,13 +113,10 @@ class Api::V1::TransactionsController < ApplicationController
     if time_unit == 'day'
       epoch_range[:start] = time.beginning_of_hour.to_i
       epoch_range[:end] = time.end_of_hour.to_i
-    elsif time_unit == 'week'
+    elsif (time_unit == 'week') || (time_unit == 'month')
       epoch_range[:start] = time.beginning_of_day.to_i
       epoch_range[:end] = time.end_of_day.to_i
-    elsif time_unit == 'month'
-      epoch_range[:start] = time.beginning_of_day.to_i
-      epoch_range[:end] = time.end_of_day.to_i
-    elsif time_unit == 'year'
+    elsif (time_unit == 'year') || (time_unit == 'all')
       epoch_range[:start] = time.beginning_of_month.to_i
       epoch_range[:end] = time.end_of_month.to_i
     end
