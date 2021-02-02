@@ -15,10 +15,10 @@ class Transaction < ApplicationRecord
   end
 
   def self.classify_nil
+    latest_transactions = []
     transactions = Transaction.where(category: nil)
     transactions.each do |transaction| 
       category = classify(transaction)
-
       unless transaction.update(category: category)
         transaction.destroy # Duplicate zhash
       end

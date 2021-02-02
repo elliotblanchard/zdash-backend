@@ -15,6 +15,14 @@ class Api::V1::TransactionsController < ApplicationController
 
   private
 
+  def calculate_month(month,offset)
+    if ((month + offset) < 13)
+      return (month + offset)
+    else
+      return (((month + offset) % 12))
+    end
+  end
+
   def get_transactions(time_unit, time)
     utc_offset = '+00:00'
     response = {}
@@ -38,10 +46,9 @@ class Api::V1::TransactionsController < ApplicationController
       when 'day' then interval = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
       when 'week' then interval = time + (i * (60 * 60 * 24)) # One day
       when 'month' then interval = time + (i * (60 * 60 * 24)) # One day
-      when 'year' then interval = Time.new(time.year, time.month + i, time.day, 0, 0, 0, utc_offset)
-      when 'all' then interval = Time.new(time.year + (i/12), time.month + (i%12), time.day, 0, 0, 0, utc_offset)
+      when 'year' then interval = Time.new(time.year + ((time.month + i) / 13), calculate_month(time.month, i), time.day, 0, 0, 0, utc_offset)
+      when 'all' then interval = Time.new(time.year + ((time.month + i) / 13), calculate_month(time.month, i), time.day, 0, 0, 0, utc_offset)
       end
-      puts("Interval is: #{interval}")
       epoch_range = time_to_epoch_range(time_unit, interval)
       time_interval = {}
       time_interval[:unit] = time_unit
