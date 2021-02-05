@@ -6,6 +6,7 @@ Rails.application.routes.draw do
       resources :accounts
       resources :networks
       resources :transactions
+      resources :users
     end
   end
 end
