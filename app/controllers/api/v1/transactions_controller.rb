@@ -15,14 +15,6 @@ class Api::V1::TransactionsController < ApplicationController
 
   private
 
-  def calculate_month(month,offset)
-    if ((month + offset) < 13)
-      return (month + offset)
-    else
-      return (((month + offset) % 12))
-    end
-  end
-
   def get_transactions(time_unit, time)
     utc_offset = '+00:00'
     response = {}
@@ -38,16 +30,17 @@ class Api::V1::TransactionsController < ApplicationController
     when 'week' then interval_number = 6
     when 'month' then interval_number = ((((1.day.ago - (time)) / 60) / 60) / 24).round
     when 'year' then interval_number = 11
-    when 'all' then interval_number = (((Time.new().year-1) - time.year) * 12) + (Time.new().month - 1)
+    when 'all' then interval_number = ((Time.new.year * 12 + Time.new.month) - (time.year * 12 + time.month)) - 1
     end
 
     (0..interval_number).each do |i|
+      #Last date in 'all' series still isn't calculating correctly - appears as Jan 20 instead of Jan 21 b/c 50/13 = 3 and we need 4
       case time_unit
       when 'day' then interval = Time.new(time.year, time.month, time.day, i, 0, 0, utc_offset)
       when 'week' then interval = time + (i * (60 * 60 * 24)) # One day
       when 'month' then interval = time + (i * (60 * 60 * 24)) # One day
-      when 'year' then interval = Time.new(time.year + ((time.month + i) / 13), calculate_month(time.month, i), time.day, 0, 0, 0, utc_offset)
-      when 'all' then interval = Time.new(time.year + ((time.month + i) / 13), calculate_month(time.month, i), time.day, 0, 0, 0, utc_offset)
+      when 'year' then interval = time + i.months
+      when 'all' then interval = time + i.months
       end
       epoch_range = time_to_epoch_range(time_unit, interval)
       time_interval = {}
