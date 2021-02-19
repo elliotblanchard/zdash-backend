@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_02_04_163227) do
+ActiveRecord::Schema.define(version: 2021_02_19_142950) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "hstore"
@@ -23,6 +23,22 @@ ActiveRecord::Schema.define(version: 2021_02_04_163227) do
     t.hstore "category_hash"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "pools", force: :cascade do |t|
+    t.integer "blockHeight"
+    t.integer "timestamp"
+    t.integer "sprout"
+    t.decimal "sproutHidden"
+    t.decimal "sproutRevealed"
+    t.decimal "sproutPool"
+    t.integer "sapling"
+    t.decimal "saplingHidden"
+    t.decimal "saplingRevealed"
+    t.decimal "saplingPool"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["timestamp"], name: "index_pools_on_timestamp"
   end
 
   create_table "transactions", force: :cascade do |t|
