@@ -84,23 +84,23 @@ class Api::V1::TransactionsController < ApplicationController
       epoch_range = time_to_epoch_range(time_unit, interval)
       time_interval = {}
       time_interval = init_time_interval_hash(time_interval, time_unit, interval, i)
-      
-      cache_used = false
+
+      cache_exists = false
 
       if time_unit != 'day'
         # Check if search has been cached for slower queries
         cache_response = Cache.where("timestamp_start = '#{epoch_range[:start]}' and timestamp_end = '#{epoch_range[:end]}'")
-        if cache_response.length > 0
+        if cache_response.length.positive? && cache_response[0].category_hash.length.positive?
           time_interval[:total] = cache_response[0].total
           category_hash = cache_response[0].category_hash
-          cache_used = true
+          cache_exists = true
         end
       end
 
-      if cache_used == false
+      if cache_exists == false
         time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
         category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
-      
+
         # If not a day, save for next time
         if time_unit != 'day'
           cache_new = Cache.create(
@@ -111,7 +111,7 @@ class Api::V1::TransactionsController < ApplicationController
           )
         end
       end
-      
+
       category_array = []
       category_hash.each do |item|
         item[0] = item[0].gsub('_', ' ').titleize

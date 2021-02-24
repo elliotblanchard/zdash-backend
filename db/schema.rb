@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_02_19_142950) do
+ActiveRecord::Schema.define(version: 2021_02_24_140318) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "hstore"
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 2021_02_19_142950) do
     t.hstore "category_hash"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.hstore "pool_hash"
   end
 
   create_table "pools", force: :cascade do |t|
