@@ -86,29 +86,37 @@ class Api::V1::TransactionsController < ApplicationController
       time_interval = init_time_interval_hash(time_interval, time_unit, interval, i)
 
       cache_exists = false
+      category_hash_exists = false
 
       if time_unit != 'day'
         # Check if search has been cached for slower queries
         cache_response = Cache.where("timestamp_start = '#{epoch_range[:start]}' and timestamp_end = '#{epoch_range[:end]}'")
-        if cache_response.length.positive? && cache_response[0].category_hash.length.positive?
-          time_interval[:total] = cache_response[0].total
-          category_hash = cache_response[0].category_hash
-          cache_exists = true
+        if cache_response.length.positive?
+          cache_exists = true 
+          if cache_response[0].category_hash.length.positive?
+            time_interval[:total] = cache_response[0].total
+            category_hash = cache_response[0].category_hash
+            category_hash_exists = true
+          end
         end
       end
 
-      if cache_exists == false
+      if cache_exists == false || category_hash_exists == false
         time_interval[:total] = Transaction.where(timestamp: epoch_range[:start]..epoch_range[:end]).count
         category_hash = Transaction.group(:category).where(timestamp: epoch_range[:start]..epoch_range[:end]).count
 
         # If not a day, save for next time
         if time_unit != 'day'
-          cache_new = Cache.create(
-            timestamp_start: epoch_range[:start],
-            timestamp_end: epoch_range[:end],
-            total: time_interval[:total],
-            category_hash: category_hash
-          )
+          if cache_exists == false
+            cache_new = Cache.create(
+              timestamp_start: epoch_range[:start],
+              timestamp_end: epoch_range[:end],
+              total: time_interval[:total],
+              category_hash: category_hash
+            )
+          else
+            cache_response[0].update(category_hash: category_hash)
+          end
         end
       end
 
