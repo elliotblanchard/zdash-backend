@@ -93,7 +93,7 @@ class Api::V1::TransactionsController < ApplicationController
         cache_response = Cache.where("timestamp_start = '#{epoch_range[:start]}' and timestamp_end = '#{epoch_range[:end]}'")
         if cache_response.length.positive?
           cache_exists = true 
-          if cache_response[0].category_hash.length.positive?
+          if cache_response[0].category_hash
             time_interval[:total] = cache_response[0].total
             category_hash = cache_response[0].category_hash
             category_hash_exists = true
