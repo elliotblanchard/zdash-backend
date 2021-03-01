@@ -18,6 +18,17 @@ task :get_latest_transactions => :environment do
   latest_transactions = []
   uri_base = 'https://api.zcha.in/v2/mainnet/transactions?sort=timestamp&direction=descending&limit='
 
+  # Shielded pool counters
+  sapling = 0
+  sapling_hidden = 0
+  sapling_revealed = 0
+  sapling_pool = 0
+  sprout = 0
+  sprout_hidden = 0
+  sprout_revealed = 0
+  sprout_pool = 0
+  latest_pools = []
+
   print("Getting new transactions. Last timestamp is: #{last_timestamp}\n")
 
   while (last_timestamp - overlap) < current_timestamp
@@ -37,9 +48,9 @@ task :get_latest_transactions => :environment do
         exit(false)
       end
     end
-  
+
     transactions = JSON.parse(buffer)
-  
+
     transactions.each_with_index do |transaction, index|
       t = Transaction.new(
         zhash: transaction['hash'],
@@ -90,7 +101,7 @@ task :get_latest_transactions => :environment do
       latest_transactions = []
     end
   end
-  
+
   Transaction.import latest_transactions # Import any remaining transactions to the db 
   print("Finished getting latest transactions. #{latest_transactions.length} processed.\n")
 
@@ -113,7 +124,47 @@ task :get_latest_transactions => :environment do
      # Destroy the rest
       array.each { |transaction| transaction.destroy }
     end
-  end  
+  end
+
+  # Once duplicates have been removed, we can do pool calculations
+  print("Doing pool calculations.\n\n")
+
+  # Load last sapling and sprout values so calculations continue correctly
+  max_timestamp = Pool.maximum('timestamp')
+  p = Pool.where("timestamp = #{max_timestamp}").first
+  sapling = p.sapling
+  sapling_hidden = p.saplingHidden
+  sapling_revealed = p.saplingRevealed
+  sapling_pool = p.saplingPool
+  sprout = p.sprout
+  sprout_hidden = p.sproutHidden
+  sprout_revealed = p.sproutRevealed
+  sprout_pool = p.sproutPool
+  
+  new_transactions = Transaction.where("timestamp > '#{last_timestamp}'").order(:timestamp)
+
+  # First 1582400093
+  # Last  1582983211
+
+  new_transactions.each do |transaction|
+    if transaction.vjoinsplit.length > 2 
+      fields = transaction.vjoinsplit.split(' ')
+      vpub_old = fields[0].split('=>')[1].gsub('"', '').gsub(',', '').to_f
+      vpub_new = fields[2].split('=>')[1].gsub('"', '').gsub(',', '').to_f
+      sprout += 1
+    end
+
+    case transaction.category
+    when 'sprout_shielding' || 'sprout_deshielding' || 'sprout_shielded'
+      # Update sprout_pool, sprout_hidden, sprout_revealed, sprout count
+    when 'sapling_shielding' || 'sapling_deshielding' || 'sapling_shielded'
+      # Update sapling_pool, sapling_hidden, sapling_revealed, sapling count
+    end
+
+    # If we've started a new block, create a Pool.new and add to latest_pools
+
+    # If latest_pools length > 500, do an import
+  end
 
   print("Current time is: #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n\n")
 end
