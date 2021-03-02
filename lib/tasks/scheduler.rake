@@ -10,7 +10,7 @@ task :get_latest_transactions => :environment do
   offset = 0
   offset_increment = 15
   overlap = 300 # 5 minutes
-  last_timestamp = Transaction.maximum('timestamp')
+  last_timestamp = Transaction.maximum('timestamp') #1614529233
   current_timestamp = Float::INFINITY
   max_block_size = 20
   retry_pause = 30
@@ -32,6 +32,7 @@ task :get_latest_transactions => :environment do
   print("Getting new transactions. Last timestamp is: #{last_timestamp}\n")
 
   while (last_timestamp - overlap) < current_timestamp
+  #while latest_transactions.length < 100
     request_uri = "#{uri_base}#{max_block_size}&offset=#{offset}"
 
     begin
@@ -142,6 +143,7 @@ task :get_latest_transactions => :environment do
   sprout_pool = p.sproutPool
   
   new_transactions = Transaction.where("timestamp > '#{last_timestamp}'").order(:timestamp)
+  current_block = new_transactions.first.blockHeight
 
   # First 1582400093
   # Last  1582983211
@@ -156,15 +158,63 @@ task :get_latest_transactions => :environment do
 
     case transaction.category
     when 'sprout_shielding' || 'sprout_deshielding' || 'sprout_shielded'
-      # Update sprout_pool, sprout_hidden, sprout_revealed, sprout count
+      # Update sprout_hidden, sprout_revealed, sprout count
+      sprout_hidden += vpub_old
+      sprout_revealed += vpub_new
+      print("category: #{transaction.category} sprout_hidden: #{sprout_hidden} sprout_revealed: #{sprout_revealed}\n")
     when 'sapling_shielding' || 'sapling_deshielding' || 'sapling_shielded'
-      # Update sapling_pool, sapling_hidden, sapling_revealed, sapling count
+      # Update sapling_hidden, sapling_revealed, sapling count 
+      sapling += 1
+      if transaction.valueBalance.negative?
+        sapling_hidden += transaction.valueBalance.to_f.abs
+      else
+        sapling_revealed += transaction.valueBalance.to_f
+      end
+      print("category: #{transaction.category} value balance: #{transaction.valueBalance} sapling_hidden: #{sapling_hidden} sapling_revealed: #{sapling_revealed}\n")
     end
 
     # If we've started a new block, create a Pool.new and add to latest_pools
-
-    # If latest_pools length > 500, do an import
+    if current_block != transaction.blockHeight
+      sprout_pool = sprout_hidden - sprout_revealed
+      sapling_pool = sapling_hidden - sapling_revealed
+      print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
+      p = Pool.new(
+        blockHeight: current_block,
+        timestamp: transaction.timestamp,
+        sprout: sprout,
+        sproutHidden: sprout_hidden,
+        sproutRevealed: sprout_revealed,
+        sproutPool: sprout_pool,
+        sapling: sapling,
+        saplingHidden: sapling_hidden,
+        saplingRevealed: sapling_revealed,
+        saplingPool: sapling_pool
+      )
+      latest_pools << p
+      print("Latest_pools: #{latest_pools.length}\n")
+      current_block = transaction.blockHeight
+    end
   end
+  # Integrate final transactions
+  sprout_pool = sprout_hidden - sprout_revealed
+  sapling_pool = sapling_hidden - sapling_revealed
+  p = Pool.new(
+    blockHeight: current_block,
+    timestamp: new_transactions.last.timestamp,
+    sprout: sprout,
+    sproutHidden: sprout_hidden,
+    sproutRevealed: sprout_revealed,
+    sproutPool: sprout_pool,
+    sapling: sapling,
+    saplingHidden: sapling_hidden,
+    saplingRevealed: sapling_revealed,
+    saplingPool: sapling_pool
+  )
+  latest_pools << p
+
+  print("Importing pools.\n")
+  Pool.import latest_pools
+  latest_pools = []
 
   print("Current time is: #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n\n")
 end
