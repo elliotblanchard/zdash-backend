@@ -122,7 +122,7 @@ task :get_latest_transactions => :environment do
   group_by_zhash.each do |key, array|
     if array.length > 1
       array.pop() # Pop one off the array
-     # Destroy the rest
+      # Destroy the rest
       array.each { |transaction| transaction.destroy }
     end
   end
@@ -151,8 +151,16 @@ task :get_latest_transactions => :environment do
   new_transactions.each do |transaction|
     if transaction.vjoinsplit.length > 2 
       fields = transaction.vjoinsplit.split(' ')
-      vpub_old = fields[0].split('=>')[1].gsub('"', '').gsub(',', '').to_f
-      vpub_new = fields[2].split('=>')[1].gsub('"', '').gsub(',', '').to_f
+      if fields[2].split('=>')[1] == nil
+        binding.pry
+      end
+      fields.each do |field|
+        if (field.include? 'vpub_old') && (!field.include? 'vpub_oldZat')
+          vpub_old = field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
+        elsif (field.include? 'vpub_new') && (!field.include? 'vpub_newZat')
+          vpub_new = field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
+        end
+      end
       sprout += 1
     end
 
@@ -177,7 +185,7 @@ task :get_latest_transactions => :environment do
     if current_block != transaction.blockHeight
       sprout_pool = sprout_hidden - sprout_revealed
       sapling_pool = sapling_hidden - sapling_revealed
-      print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
+      # Print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
       p = Pool.new(
         blockHeight: current_block,
         timestamp: transaction.timestamp,
