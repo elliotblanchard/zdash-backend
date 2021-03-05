@@ -25,7 +25,7 @@ class Api::V1::PoolsController < ApplicationController
       pool_hash_exists = false
       pool_hash = {}
 
-      if time_unit != 'day'
+      if (time_unit != 'day') || (time_unit != 'week')
         # Check if search has been cached for slower queries
         cache_response = Cache.where("timestamp_start = '#{epoch_range[:start]}' and timestamp_end = '#{epoch_range[:end]}'")
         if cache_response.length.positive?
@@ -44,13 +44,13 @@ class Api::V1::PoolsController < ApplicationController
         pool_hash["sapling_pool"] = closest_block.saplingPool
 
         # If not a day, save for next time
-        if time_unit != 'day'
+        if (time_unit != 'day') || (time_unit != 'week')
           if cache_exists == false
             cache_new = Cache.create(
               timestamp_start: epoch_range[:start],
               timestamp_end: epoch_range[:end],
               pool_hash: pool_hash
-            )            
+            )
           else
             cache_response[0].update(pool_hash: pool_hash)
           end

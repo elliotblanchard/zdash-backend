@@ -61,7 +61,7 @@ class Transaction < ApplicationRecord
           end
         else
           if transaction.vjoinsplit.length > 2
-            if ( transaction.vShieldedOutput && (transaction.vShieldedOutput > 0.0) ) 
+            if ( transaction.vShieldedOutput && (transaction.vShieldedOutput.to_f > 0.0) ) # Change
               'migration'
             else
               'sprout_shielded'

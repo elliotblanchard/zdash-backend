@@ -58,6 +58,7 @@ class Api::V1::TransactionsController < ApplicationController
             )
           else
             cache_response[0].update(category_hash: category_hash)
+            cache_response[0].update(total: time_interval[:total])
           end
         end
       end

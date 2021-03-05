@@ -151,10 +151,10 @@ task :get_latest_transactions => :environment do
   new_transactions.each do |transaction|
     if transaction.vjoinsplit.length > 2 
       fields = transaction.vjoinsplit.split(' ')
-      if fields[2].split('=>')[1] == nil
-        binding.pry
-      end
-      fields.each do |field|
+      #if fields[2].split('=>')[1] == nil
+      #  binding.pry
+      #end
+      fields.each do |field| # This block is a change
         if (field.include? 'vpub_old') && (!field.include? 'vpub_oldZat')
           vpub_old = field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
         elsif (field.include? 'vpub_new') && (!field.include? 'vpub_newZat')
@@ -171,7 +171,7 @@ task :get_latest_transactions => :environment do
       sprout_revealed += vpub_new
       print("category: #{transaction.category} sprout_hidden: #{sprout_hidden} sprout_revealed: #{sprout_revealed}\n")
     when 'sapling_shielding' || 'sapling_deshielding' || 'sapling_shielded'
-      # Update sapling_hidden, sapling_revealed, sapling count 
+      # Update sapling_hidden, sapling_revealed, sapling count
       sapling += 1
       if transaction.valueBalance.negative?
         sapling_hidden += transaction.valueBalance.to_f.abs
