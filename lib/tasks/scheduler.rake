@@ -149,16 +149,18 @@ task :get_latest_transactions => :environment do
   # Last  1582983211
 
   new_transactions.each do |transaction|
-    if transaction.vjoinsplit.length > 2 
+    if transaction.vjoinsplit.length > 2
       fields = transaction.vjoinsplit.split(' ')
       #if fields[2].split('=>')[1] == nil
       #  binding.pry
       #end
-      fields.each do |field| # This block is a change
-        if (field.include? 'vpub_old') && (!field.include? 'vpub_oldZat')
-          vpub_old = field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
-        elsif (field.include? 'vpub_new') && (!field.include? 'vpub_newZat')
-          vpub_new = field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
+      vpub_old = 0
+      vpub_new = 0      
+      fields.each do |field| 
+        if field.include? 'vpub_oldZat'
+          vpub_old += field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
+        elsif field.include? 'vpub_newZat'
+          vpub_new += field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
         end
       end
       sprout += 1
@@ -183,7 +185,7 @@ task :get_latest_transactions => :environment do
 
     # If we've started a new block, create a Pool.new and add to latest_pools
     if current_block != transaction.blockHeight
-      sprout_pool = sprout_hidden - sprout_revealed
+      sprout_pool = (sprout_hidden - sprout_revealed) / 100000000
       sapling_pool = sapling_hidden - sapling_revealed
       # Print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
       p = Pool.new(
