@@ -19,11 +19,11 @@ task :get_latest_transactions => :environment do
   uri_base = 'https://api.zcha.in/v2/mainnet/transactions?sort=timestamp&direction=descending&limit='
 
   # Shielded pool counters
-  sapling = 0
+  #sapling = 0
   sapling_hidden = 0
   sapling_revealed = 0
   sapling_pool = 0
-  sprout = 0
+  #sprout = 0
   sprout_hidden = 0
   sprout_revealed = 0
   sprout_pool = 0
@@ -32,7 +32,6 @@ task :get_latest_transactions => :environment do
   print("Getting new transactions. Last timestamp is: #{last_timestamp}\n")
 
   while (last_timestamp - overlap) < current_timestamp
-  #while latest_transactions.length < 100
     request_uri = "#{uri_base}#{max_block_size}&offset=#{offset}"
 
     begin
@@ -110,8 +109,9 @@ task :get_latest_transactions => :environment do
   # We have to check outselves - this is still much faster than the alternative
 
   all_transactions = Transaction.where("timestamp > '#{last_timestamp}'")
-  unique_transactions = all_transactions.uniq { |transaction| transaction.zhash }
-  group_by_zhash = all_transactions.group_by { |transaction| transaction.zhash }
+
+  unique_transactions = all_transactions.uniq(&:zhash)
+  group_by_zhash = all_transactions.group_by(&:zhash)
 
   print("Removing duplicates...\n")
   print("Transactions since timestamp: #{last_timestamp}: #{all_transactions.count}\n")
@@ -123,7 +123,7 @@ task :get_latest_transactions => :environment do
     if array.length > 1
       array.pop() # Pop one off the array
       # Destroy the rest
-      array.each { |transaction| transaction.destroy }
+      array.each(&:destroy)
     end
   end
 
@@ -131,22 +131,20 @@ task :get_latest_transactions => :environment do
   print("Doing pool calculations.\n\n")
 
   # Load last sapling and sprout values so calculations continue correctly
+  # THIS NEEDS UPDATING
   max_timestamp = Pool.maximum('timestamp')
   p = Pool.where("timestamp = #{max_timestamp}").first
-  sapling = p.sapling
-  sapling_hidden = p.saplingHidden
-  sapling_revealed = p.saplingRevealed
+  # sapling = p.sapling
+  # sapling_hidden = p.saplingHidden
+  # sapling_revealed = p.saplingRevealed
   sapling_pool = p.saplingPool
-  sprout = p.sprout
-  sprout_hidden = p.sproutHidden
-  sprout_revealed = p.sproutRevealed
+  # sprout = p.sprout
+  # sprout_hidden = p.sproutHidden
+  # sprout_revealed = p.sproutRevealed
   sprout_pool = p.sproutPool
-  
+
   new_transactions = Transaction.where("timestamp > '#{last_timestamp}'").order(:timestamp)
   current_block = new_transactions.first.blockHeight
-
-  # First 1582400093
-  # Last  1582983211
 
   new_transactions.each do |transaction|
     if transaction.vjoinsplit.length > 2
@@ -155,7 +153,7 @@ task :get_latest_transactions => :environment do
       #  binding.pry
       #end
       vpub_old = 0
-      vpub_new = 0      
+      vpub_new = 0
       fields.each do |field| 
         if field.include? 'vpub_oldZat'
           vpub_old += field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
@@ -163,7 +161,7 @@ task :get_latest_transactions => :environment do
           vpub_new += field.split('=>')[1].gsub('"', '').gsub(',', '').to_f
         end
       end
-      sprout += 1
+      #sprout += 1
     end
 
     case transaction.category
@@ -174,7 +172,7 @@ task :get_latest_transactions => :environment do
       print("category: #{transaction.category} sprout_hidden: #{sprout_hidden} sprout_revealed: #{sprout_revealed}\n")
     when 'sapling_shielding' || 'sapling_deshielding' || 'sapling_shielded'
       # Update sapling_hidden, sapling_revealed, sapling count
-      sapling += 1
+      # sapling += 1
       if transaction.valueBalance.negative?
         sapling_hidden += transaction.valueBalance.to_f.abs
       else
@@ -185,19 +183,19 @@ task :get_latest_transactions => :environment do
 
     # If we've started a new block, create a Pool.new and add to latest_pools
     if current_block != transaction.blockHeight
-      sprout_pool = (sprout_hidden - sprout_revealed) / 100000000
-      sapling_pool = sapling_hidden - sapling_revealed
-      # Print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
+      sprout_pool += ((sprout_hidden - sprout_revealed) / 100000000)
+      sapling_pool += (sapling_hidden - sapling_revealed)
+      Print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
       p = Pool.new(
         blockHeight: current_block,
         timestamp: transaction.timestamp,
-        sprout: sprout,
-        sproutHidden: sprout_hidden,
-        sproutRevealed: sprout_revealed,
+        sprout: 0,
+        sproutHidden: 0.0,
+        sproutRevealed: 0.0,
         sproutPool: sprout_pool,
-        sapling: sapling,
-        saplingHidden: sapling_hidden,
-        saplingRevealed: sapling_revealed,
+        sapling: 0,
+        saplingHidden: 0.0,
+        saplingRevealed: 0.0,
         saplingPool: sapling_pool
       )
       latest_pools << p
@@ -205,19 +203,19 @@ task :get_latest_transactions => :environment do
       current_block = transaction.blockHeight
     end
   end
-  # Integrate final transactions
-  sprout_pool = sprout_hidden - sprout_revealed
-  sapling_pool = sapling_hidden - sapling_revealed
+  # Integrate final pool
+  sprout_pool += ((sprout_hidden - sprout_revealed) / 100000000)
+  sapling_pool += sapling_hidden - sapling_revealed
   p = Pool.new(
     blockHeight: current_block,
     timestamp: new_transactions.last.timestamp,
-    sprout: sprout,
-    sproutHidden: sprout_hidden,
-    sproutRevealed: sprout_revealed,
+    sprout: 0,
+    sproutHidden: 0.0,
+    sproutRevealed: 0.0,
     sproutPool: sprout_pool,
-    sapling: sapling,
-    saplingHidden: sapling_hidden,
-    saplingRevealed: sapling_revealed,
+    sapling: 0,
+    saplingHidden: 0.0,
+    saplingRevealed: 0.0,
     saplingPool: sapling_pool
   )
   latest_pools << p
@@ -232,8 +230,8 @@ end
 task :remove_duplicates => :environment do
   last_timestamp = 1610574707
   all_transactions = Transaction.where("timestamp > '#{last_timestamp}'")
-  unique_transactions = all_transactions.uniq { |transaction| transaction.zhash }
-  group_by_zhash = all_transactions.group_by { |transaction| transaction.zhash }
+  unique_transactions = all_transactions.uniq(&:zhash)
+  group_by_zhash = all_transactions.group_by(&:zhash)
 
   print("In remove duplicates.\n")
   print("Transactions since timestamp: #{last_timestamp}: #{all_transactions.count}\n")
@@ -245,7 +243,7 @@ task :remove_duplicates => :environment do
     if array.length > 1
       array.pop() # Pop one off the array
      # Destroy the rest
-      array.each { |transaction| transaction.destroy }
+      array.each(&:destroy)
     end
   end
   
