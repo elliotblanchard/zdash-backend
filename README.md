@@ -1,6 +1,8 @@
 # Zdash: Live analytics for Zcash
 Dashboard for private transactions in the Zcash cryptocurrency
 
+![Zdash](http://invisiblelightnetwork.com/wp-content/uploads/2021/03/zdash_comped.png)
+
 ## Features :sparkles:
 * Only source online for data on all categories of Zcash transactions
 * Live Zcash network data
