@@ -16,7 +16,8 @@ task :get_latest_transactions => :environment do
   retry_pause = 30
   max_retries = 20
   latest_transactions = []
-  uri_base = 'https://api.zcha.in/v2/mainnet/transactions?sort=timestamp&direction=descending&limit='
+  uri_base = 'https://api.zcha.in/v2/mainnet/transactions'
+  multiple_transactions = '?sort=timestamp&direction=descending&limit='
 
   # Shielded pool counters
   #sapling = 0
@@ -32,11 +33,11 @@ task :get_latest_transactions => :environment do
   print("Getting new transactions. Last timestamp is: #{last_timestamp}\n")
 
   while (last_timestamp - overlap) < current_timestamp
-    request_uri = "#{uri_base}#{max_block_size}&offset=#{offset}"
+    request_uri = "#{uri_base}#{multiple_transactions}#{max_block_size}&offset=#{offset}"
 
     begin
       retries ||= 0
-      buffer = open(request_uri).read
+      buffer = URI.parse(request_uri).open.read
     rescue => e
       if retries < max_retries
         retries += 1
@@ -78,6 +79,16 @@ task :get_latest_transactions => :environment do
       )
 
       t.category = Transaction.classify(t)
+
+      if ((t.category == 'sapling_shielding') || (t.category == 'sapling_deshielding') || (t.category == 'sapling_shielded'))
+        # Need to re-query as a single transaction
+        # API reports Value Balance wrong in multiple transaction queries
+        requery_uri = "#{uri_base}/#{t.zhash}"
+        requery_buffer = URI.parse(requery_uri).open.read
+        requery_transaction = JSON.parse(requery_buffer)
+        t.valueBalance = requery_transaction['valueBalance']
+      end
+
       latest_transactions << t
 
       transaction_time = Time.at(transaction['timestamp']).to_datetime.strftime('%I:%M%p %a %m/%d/%y')
@@ -169,7 +180,7 @@ task :get_latest_transactions => :environment do
       # Update sprout_hidden, sprout_revealed, sprout count
       sprout_hidden += vpub_old
       sprout_revealed += vpub_new
-      print("category: #{transaction.category} sprout_hidden: #{sprout_hidden} sprout_revealed: #{sprout_revealed}\n")
+      print("zhash: #{transaction.zhash} category: #{transaction.category} sprout_hidden: #{sprout_hidden} sprout_revealed: #{sprout_revealed}\n")
     when 'sapling_shielding' || 'sapling_deshielding' || 'sapling_shielded'
       # Update sapling_hidden, sapling_revealed, sapling count
       # sapling += 1
@@ -178,14 +189,14 @@ task :get_latest_transactions => :environment do
       else
         sapling_revealed += transaction.valueBalance.to_f
       end
-      print("category: #{transaction.category} value balance: #{transaction.valueBalance} sapling_hidden: #{sapling_hidden} sapling_revealed: #{sapling_revealed}\n")
+      print("zhash: #{transaction.zhash} category: #{transaction.category} value balance: #{transaction.valueBalance} sapling_hidden: #{sapling_hidden} sapling_revealed: #{sapling_revealed}\n")
     end
 
     # If we've started a new block, create a Pool.new and add to latest_pools
     if current_block != transaction.blockHeight
       sprout_pool += ((sprout_hidden - sprout_revealed) / 100000000)
       sapling_pool += (sapling_hidden - sapling_revealed)
-      Print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
+      # print("Creating new pool. Sprout_pool: #{sprout_pool} sapling_pool: #{sapling_pool}\n")
       p = Pool.new(
         blockHeight: current_block,
         timestamp: transaction.timestamp,
@@ -199,7 +210,7 @@ task :get_latest_transactions => :environment do
         saplingPool: sapling_pool
       )
       latest_pools << p
-      print("Latest_pools: #{latest_pools.length}\n")
+      #print("Latest_pools: #{latest_pools.length}\n")
       current_block = transaction.blockHeight
     end
   end
