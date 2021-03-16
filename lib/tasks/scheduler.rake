@@ -154,6 +154,8 @@ task :get_latest_transactions => :environment do
   # sprout_revealed = p.sproutRevealed
   sprout_pool = p.sproutPool
 
+  print("Initial sapling_pool: #{sapling_pool}, sprout_pool: #{sprout_pool}")
+
   new_transactions = Transaction.where("timestamp > '#{last_timestamp}'").order(:timestamp)
   current_block = new_transactions.first.blockHeight
 
@@ -233,6 +235,7 @@ task :get_latest_transactions => :environment do
 
   print("Importing pools.\n")
   Pool.import latest_pools
+  print("Final sapling_pool: #{latest_pools.last.saplingPool}, sprout_pool: #{latest_pools.last.sproutPool}")
   latest_pools = []
 
   print("Current time is: #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n\n")
