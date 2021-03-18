@@ -1,5 +1,15 @@
 desc "This task is called by the Heroku scheduler add-on"
-task :get_latest_transactions => :environment do
+
+task :get_latest_transactions_rpc => :environment do
+  require 'activerecord-import'
+  require 'rpcjson'
+  require 'json'
+  require 'open-uri'
+  require 'pry'
+  require 'dotenv-rails'
+end
+
+task :get_latest_transactions_zchain => :environment do
   require 'activerecord-import'
   require 'json'
   require 'open-uri'
