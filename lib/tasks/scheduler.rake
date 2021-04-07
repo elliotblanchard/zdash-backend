@@ -1,12 +1,64 @@
 desc "This task is called by the Heroku scheduler add-on"
 
-task :get_latest_transactions_rpc => :environment do
+task :get_latest_transactions_zcash_api => :environment do
   require 'activerecord-import'
-  require 'rpcjson'
   require 'json'
   require 'open-uri'
   require 'pry'
-  require 'dotenv-rails'
+
+  uri_base = 'http://localhost:3000/'
+ 
+  buffer = URI.parse("#{uri_base}getinfo").open.read
+  network_info = JSON.parse(buffer)
+
+  start_block = Pool.maximum('blockHeight') + 1
+  final_block = network_info['result']['blocks'] - 100
+
+  latest_transactions = []
+  latest_pools = []
+  
+  # Main loop: get each block in Zcash blockchain
+  (start_block..final_block).each do |i|
+    buffer = URI.parse("#{uri_base}getBlock?height=#{i}").open.read
+    current_block = JSON.parse(buffer)
+    num_transactions = current_block['result']['tx'].length - 1
+    # Inner loop: get each transaction in this block
+    (0..num_transactions).each do |j|
+      tx_hash = current_block['result']['tx'][j]
+      buffer = URI.parse("#{uri_base}getrawtransaction?txid=#{tx_hash}").open.read
+      current_transaction = JSON.parse(buffer)
+      t = Transaction.new(
+        zhash: current_transaction['result']['txid'],
+        mainChain: nil,
+        fee: nil,
+        ttype: nil,
+        shielded: nil,
+        index: nil,
+        blockHash: current_block['result']['hash'],
+        blockHeight: i,
+        version: current_transaction['result']['version'],
+        lockTime: current_transaction['result']['locktime'],
+        timestamp: current_transaction['result']['time'],
+        time: nil,
+        vin: current_transaction['result']['vin'],
+        vout: current_transaction['result']['vout'],
+        vjoinsplit: current_transaction['result']['vjoinsplit'],
+        vShieldedOutput: current_transaction['result']['vShieldedOutput'],
+        vShieldedSpend: current_transaction['result']['vShieldedSpend'],
+        valueBalance: current_transaction['result']['valueBalance'],
+        value: nil,
+        outputValue: nil,
+        shieldedValue: nil,
+        overwintered: current_transaction['result']['overwintered']
+      )
+
+      t.category = Transaction.classify(t)
+      latest_transactions << t
+
+      binding.pry
+    end
+  end
+
 end
 
 task :get_latest_transactions_zchain => :environment do
