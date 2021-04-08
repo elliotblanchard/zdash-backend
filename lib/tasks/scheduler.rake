@@ -11,7 +11,7 @@ task :get_latest_transactions_zcash_api => :environment do
   buffer = URI.parse("#{uri_base}getinfo").open.read
   network_info = JSON.parse(buffer)
 
-  start_block = Pool.maximum('blockHeight') + 1
+  start_block = Pool.maximum('blockHeight') + 1 # Last good block before testing: 1180582
   final_block = network_info['result']['blocks'] - 100
 
   latest_transactions = []
@@ -55,10 +55,45 @@ task :get_latest_transactions_zcash_api => :environment do
       t.category = Transaction.classify(t)
       latest_transactions << t
 
-      binding.pry
+      if (latest_transactions.length % 1000).zero?
+        print "At block: #{i} Importing transactions at #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n"
+        Transaction.import latest_transactions
+        print "Finished importing transactions. At block #{i} of #{final_block} (#{((i.to_f / final_block) * 100).round(2)}%) at #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}. Imported #{latest_transactions.length} transactions.\n"
+        latest_transactions = []
+      end
+    end
+    if latest_transactions.last
+      timestamp = latest_transactions.last.timestamp
+    else
+      timestamp = Transaction.last.timestamp
+    end
+
+    p = Pool.new(
+      blockHeight: i,
+      timestamp: timestamp,
+      sprout: 0,
+      sproutHidden: 0.0,
+      sproutRevealed: 0.0,
+      sproutPool: current_block['result']['valuePools'][0]['chainValue'],
+      sapling: 0,
+      saplingHidden: 0.0,
+      saplingRevealed: 0.0,
+      saplingPool: current_block['result']['valuePools'][1]['chainValue']
+    )
+    latest_pools << p
+
+    if (latest_pools.length % 1000).zero?
+      print "At block: #{i} Importing pools. sprout pool: #{current_block['result']['valuePools'][0]['chainValue']} sapling pool: #{current_block['result']['valuePools'][1]['chainValue']}.\n"
+      Pool.import latest_pools
+      latest_pools = []
     end
   end
-
+  # Save final group of transacations / pools in the array
+  print "Importing blocks at #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n"
+  Transaction.import latest_transactions
+  Pool.import latest_pools
+  latest_transactions = []
+  latest_pools = []
 end
 
 task :get_latest_transactions_zchain => :environment do
