@@ -6,7 +6,7 @@ task :get_latest_transactions_zcash_api => :environment do
   require 'open-uri'
   require 'pry'
 
-  uri_base = 'http://localhost:3000/'
+  uri_base = 'http://97.107.142.251:3000/'
  
   buffer = URI.parse("#{uri_base}getinfo").open.read
   network_info = JSON.parse(buffer)
