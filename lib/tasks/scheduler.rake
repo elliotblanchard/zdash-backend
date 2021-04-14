@@ -11,9 +11,6 @@ task :get_latest_transactions_zcash_api => :environment do
   buffer = URI.parse("#{uri_base}getinfo").open.read
   network_info = JSON.parse(buffer)
 
-  # Last good block before testing: 1208145
-  # Thursday, April 8, 2021 4:46:24 PM GMT
-  # Now 1210500
   start_block = Pool.maximum('blockHeight') + 1 
   final_block = network_info['result']['blocks'] - 25
 
