@@ -13,8 +13,9 @@ task :get_latest_transactions_zcash_api => :environment do
 
   # Last good block before testing: 1208145
   # Thursday, April 8, 2021 4:46:24 PM GMT
+  # Now 1210500
   start_block = Pool.maximum('blockHeight') + 1 
-  final_block = network_info['result']['blocks'] - 100
+  final_block = network_info['result']['blocks'] - 25
 
   latest_transactions = []
   latest_pools = []
@@ -99,6 +100,7 @@ task :get_latest_transactions_zcash_api => :environment do
 end
 
 task :get_latest_transactions_zchain => :environment do
+  # Depricated - do not use. Does not handle 
   require 'activerecord-import'
   require 'json'
   require 'open-uri'
