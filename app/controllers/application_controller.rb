@@ -20,6 +20,7 @@ class ApplicationController < ActionController::API
     when 'week' then 1.week.ago - 1.day
     when 'month' then 1.month.ago - 1.day
     when 'year' then 1.year.ago - 1.day
+    when 'three_years' then 3.years.ago - 1.day
     when 'all' then zcash_first_transaction
     end
   end
@@ -30,6 +31,7 @@ class ApplicationController < ActionController::API
     when 'week' then 6
     when 'month' then number_of_weeks(time)
     when 'year' then 11
+    when 'three_years' then 33
     when 'all' then number_of_months(time)
     end
   end
@@ -50,6 +52,7 @@ class ApplicationController < ActionController::API
     when 'week' then time + (interval * (60 * 60 * 24)) # One day
     when 'month' then time + (interval * (60 * 60 * 24)) # One day
     when 'year' then time + interval.months
+    when 'three_years' then time + interval.months
     when 'all' then time + interval.months
     end
   end
@@ -60,6 +63,7 @@ class ApplicationController < ActionController::API
     when 'week' then 'day'
     when 'month' then 'day'
     when 'year' then 'month'
+    when 'three_years' then 'month'
     when 'all' then 'month'
     end
   end
@@ -70,6 +74,7 @@ class ApplicationController < ActionController::API
     when 'week' then interval.strftime('%a %-m/%d')
     when 'month' then interval.strftime('%a %-m/%d')
     when 'year' then interval.strftime('%b %y')
+    when 'three_years' then interval.strftime('%b %y')
     when 'all' then interval.strftime('%b %y')
     end
   end
