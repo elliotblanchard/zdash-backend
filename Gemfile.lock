@@ -74,7 +74,7 @@ GEM
     ffi (1.13.1)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
-    httparty (0.18.1)
+    httparty (0.19.0)
       mime-types (~> 3.0)
       multi_xml (>= 0.5.2)
     i18n (1.8.5)
@@ -172,7 +172,7 @@ DEPENDENCIES
   byebug
   colorize (~> 0.8.1)
   dotenv-rails (~> 2.7, >= 2.7.6)
-  httparty (~> 0.18.1)
+  httparty (~> 0.19.0)
   listen (~> 3.2)
   pg (>= 0.18, < 2.0)
   pry (~> 0.13.1)

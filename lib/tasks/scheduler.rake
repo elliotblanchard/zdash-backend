@@ -1,12 +1,27 @@
 desc "This task is called by the Heroku scheduler add-on"
 
-task :get_latest_transactions_zcash_api => :environment do
+task :get_latest_transactions_lightwalletd_proxy => :environment do
   require 'activerecord-import'
   require 'json'
   require 'open-uri'
   require 'pry'
 
-  uri_base = 'http://97.107.142.251:3000/'
+  uri_base = 'http://localhost:8000/'
+ 
+  buffer = HTTParty.post(uri_base, body: { 'method': 'GetLightdInfo', 'params': {} })
+  # network_info = JSON.parse(buffer)
+
+  print "Network info: #{buffer}"
+
+end
+
+task :get_latest_transactions_zcash_api => :environment do
+  require 'activerecord-import'
+  require 'json'
+  require 'httparty'
+  require 'pry'
+
+  uri_base = 'http://192.168.1.5:3000/'
  
   buffer = URI.parse("#{uri_base}getinfo").open.read
   network_info = JSON.parse(buffer)

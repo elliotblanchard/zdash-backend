@@ -4,7 +4,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '2.6.1'
 
 gem "colorize", "~> 0.8.1"
-gem 'httparty', '~> 0.18.1'
+gem 'httparty', '~> 0.19.0'
 gem 'pry', '~> 0.13.1'
 gem 'activerecord-import', '~> 1.0', '>= 1.0.7'
 gem 'dotenv-rails', '~> 2.7', '>= 2.7.6'
