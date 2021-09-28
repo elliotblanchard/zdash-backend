@@ -5,13 +5,33 @@ task :get_latest_transactions_lightwalletd_proxy => :environment do
   require 'json'
   require 'open-uri'
   require 'pry'
+  require 'uri'
+  require 'net/http'
 
   uri_base = 'http://localhost:8000/'
- 
-  buffer = HTTParty.post(uri_base, body: { 'method': 'GetLightdInfo', 'params': {} })
-  # network_info = JSON.parse(buffer)
 
-  print "Network info: #{buffer}"
+  # GetLightdInfo
+  # buffer = HTTParty.post(uri_base,
+  # {
+  #   body: { method: 'GetLightdInfo', params: {} }.to_json,
+  #   headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
+  # })
+
+  # GetBlock
+  # buffer = HTTParty.post(uri_base,
+  # {
+  #   body: { method: 'GetBlock', params: { height: '10000' } }.to_json,
+  #   headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
+  # })
+
+  # GetTransaction
+  # buffer = HTTParty.post(uri_base,
+  # {
+  #   body: { method: 'GetTransaction', params: { hash: 'fdde78d0f0e92a0296a5d9f570131da5917bc4bf5c56b92e912a86fb72228f59' } }.to_json,
+  #   headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
+  # })
+
+  print "Response: #{buffer}"
 
 end
 
