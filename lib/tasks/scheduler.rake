@@ -31,7 +31,19 @@ task :get_latest_transactions_lightwalletd_proxy => :environment do
   #   headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
   # })
 
-  print "Response: #{buffer}"
+  buffer = HTTParty.post(uri_base,
+  {
+    body: { method: 'GetLightdInfo', params: {} }.to_json,
+    headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
+  })
+
+  start_block = Pool.maximum('blockHeight') + 1
+  final_block = buffer['blockHeight'].to_i - 25
+
+  latest_transactions = []
+  latest_pools = []
+
+  print(start_block)
 
 end
 
