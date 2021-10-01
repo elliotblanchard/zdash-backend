@@ -24,11 +24,7 @@ Dashboard for private transactions in the Zcash cryptocurrency
   * [ActiveRecord Import](https://rubygems.org/gems/activerecord-import) for optimized transaction import
   * 8 million+ record PostgreSQL database
 
-
-## Get Started
-Visit https://www.zdash.info/
-
-## Or install:
+## Install:
 
 ### Fork and clone Rails API backend:
 * git clone to your local directory

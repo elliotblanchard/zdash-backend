@@ -43,8 +43,92 @@ task :get_latest_transactions_lightwalletd_proxy => :environment do
   latest_transactions = []
   latest_pools = []
 
-  print(start_block)
+  # Main loop: get each block in Zcash blockchain
+  (start_block..final_block).each do |i|
+    buffer = HTTParty.post(uri_base,
+    {
+      body: { method: 'GetBlock', params: { height: i } }.to_json,
+      headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
+    })
 
+    # buffer = URI.parse("#{uri_base}getBlock?height=#{i}").open.read
+    # current_block = JSON.parse(buffer)
+
+    binding.pry
+
+    num_transactions = current_block['result']['tx'].length - 1
+    # Inner loop: get each transaction in this block
+    (0..num_transactions).each do |j|
+      tx_hash = current_block['result']['tx'][j]
+      buffer = URI.parse("#{uri_base}getrawtransaction?txid=#{tx_hash}").open.read
+      current_transaction = JSON.parse(buffer)
+      t = Transaction.new(
+        zhash: current_transaction['result']['txid'],
+        mainChain: nil,
+        fee: nil,
+        ttype: nil,
+        shielded: nil,
+        index: nil,
+        blockHash: current_block['result']['hash'],
+        blockHeight: i,
+        version: current_transaction['result']['version'],
+        lockTime: current_transaction['result']['locktime'],
+        timestamp: current_transaction['result']['time'],
+        time: nil,
+        vin: current_transaction['result']['vin'],
+        vout: current_transaction['result']['vout'],
+        vjoinsplit: current_transaction['result']['vjoinsplit'],
+        vShieldedOutput: current_transaction['result']['vShieldedOutput'],
+        vShieldedSpend: current_transaction['result']['vShieldedSpend'],
+        valueBalance: current_transaction['result']['valueBalance'],
+        value: nil,
+        outputValue: nil,
+        shieldedValue: nil,
+        overwintered: current_transaction['result']['overwintered']
+      )
+
+      t.category = Transaction.classify(t)
+      latest_transactions << t
+
+      if (latest_transactions.length % 1000).zero?
+        print "At block: #{i} Importing transactions at #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n"
+        Transaction.import latest_transactions
+        print "Finished importing transactions. At block #{i} of #{final_block} (#{((i.to_f / final_block) * 100).round(2)}%) at #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}. Imported #{latest_transactions.length} transactions.\n"
+        latest_transactions = []
+      end
+    end
+    if latest_transactions.last
+      timestamp = latest_transactions.last.timestamp
+    else
+      timestamp = Transaction.last.timestamp
+    end
+
+    p = Pool.new(
+      blockHeight: i,
+      timestamp: timestamp,
+      sprout: 0,
+      sproutHidden: 0.0,
+      sproutRevealed: 0.0,
+      sproutPool: current_block['result']['valuePools'][0]['chainValue'],
+      sapling: 0,
+      saplingHidden: 0.0,
+      saplingRevealed: 0.0,
+      saplingPool: current_block['result']['valuePools'][1]['chainValue']
+    )
+    latest_pools << p
+
+    if (latest_pools.length % 1000).zero?
+      print "At block: #{i} Importing pools. sprout pool: #{current_block['result']['valuePools'][0]['chainValue']} sapling pool: #{current_block['result']['valuePools'][1]['chainValue']}.\n"
+      Pool.import latest_pools
+      latest_pools = []
+    end
+  end
+  # Save final group of transacations / pools in the array
+  print "Importing blocks at #{DateTime.now.strftime('%I:%M%p %a %m/%d/%y')}.\n"
+  Transaction.import latest_transactions
+  Pool.import latest_pools
+  latest_transactions = []
+  latest_pools = []
 end
 
 task :get_latest_transactions_zcash_api => :environment do
@@ -56,6 +140,7 @@ task :get_latest_transactions_zcash_api => :environment do
   uri_base = 'http://192.168.1.5:3000/'
  
   buffer = URI.parse("#{uri_base}getinfo").open.read
+
   network_info = JSON.parse(buffer)
 
   start_block = Pool.maximum('blockHeight') + 1 
