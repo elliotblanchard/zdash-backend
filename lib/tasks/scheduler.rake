@@ -137,7 +137,7 @@ task :get_latest_transactions_zcash_api => :environment do
   require 'httparty'
   require 'pry'
 
-  uri_base = 'http://192.168.1.5:3000/'
+  uri_base = 'http://69.164.208.245:3000/'
  
   buffer = URI.parse("#{uri_base}getinfo").open.read
 
